@@ -1,0 +1,173 @@
+\documentclass[a4paper,twoside,12pt]{article}
+
+\usepackage[french]{babel}
+
+\usepackage{fontspec}
+
+\usepackage{hyperref}
+\hypersetup{colorlinks,urlcolor=blue}
+
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\setlength{\parindent}{0cm}
+\onehalfspacing
+
+%%%Pour les tableaux
+%\usepackage{multirow}
+
+
+%\footparagraph{A}
+
+%\renewcommand{\Rlineflag}{D}
+
+\hyphenation{}
+
+
+\usepackage[babel]{csquotes}
+\renewenvironment{quote}{\small\list{}{\rightmargin=1.5cm \leftmargin=1.5cm}%
+   \item\relax}
+  {\endlist}
+
+%\usepackage[backend=biber, sorting=nyt, style=enc]{biblatex}
+%\addbibresource{biblio/references.bib}
+
+
+
+\usepackage{enumerate,lettrine}
+
+\title{Y a-t-il une spécificité thématique de la pastorale\ ?}
+\author{}
+\date{}
+
+
+\begin{document}
+\maketitle
+
+\section*{Sujet}
+Le genre de la pastorale a eu une réception plus chaotique (Mortgat-Longuet, 2007) que les tragédies et comédies de l’époque – au point qu’aujourd’hui, le genre est peu connu, et mal identifié. Dans sa \textit{Pratique du théâtre}, l’Abbé d’Aubignac comptait pourtant la pastorale comme un des trois genres fondamentaux du théâtre de son époque\ :
+
+\begin{displayquote}
+Comme il y a trois sortes de Vies, celle des Grands dans la Cour des Rois, celle des Bourgeois dans les Villes, et celle des gens de la Campagne ; le Théâtre aussi a reçu trois genres de Poèmes Dramatiques qui portent en particulier le caractère de chacune de ces trois sortes de Vies, savoir la Tragédie, la Comédie, et la Satyre ou Pastorale.
+\end{displayquote}
+
+Qu’est ce qui au-delà du caractère tragique ou comique, fait la spécificité de la pastorale\ ? Quelles sont les délimitations de ce genre\ ? Notons que beaucoup de pièces aujourd’hui considérées comme ayant un caractère pastoral n’était pas explicitement désignées ainsi (Berregard, 2007). D’après l’analyse de leurs thématiques, quelles seraient les pièces qui, bien que n’étant pas étiquetée comme pastorales, mériteraient une telle appellation\ ?
+
+Retrouve-t-on, en étudiant les thématiques de ces pièces, les différentes variations évoquées par certains critiques (\og pastorales pures \fg{}, \og comédies de couleur pastorale \fg{}, \og comédies de type pastoral \fg{}, (Morel, 1968\ ; Scherrer, 1983)\ ?
+
+\section*{Données}
+On dispose de 493 œuvres dramatiques françaises du XVIIe siècle.\\
+Chaque pièce est fournie sous la forme d'un fichier XML-TEI annoté.\\
+L'ensemble est accompagné d'un tableau de métadonnées qui fournissent, au-delà des informations nécessaires à l'identification de chaque pièce, des données sur la date, la structure, la taille et, ce qui nous intéresse plus particulièrement, le genre et l'inspiration.
+
+\section*{Approches retenues}
+On essaiera de traiter le sujet en abordant successivement les trois questions suivantes\ :
+\begin{itemize}
+\item question 1\ : peut-on vérifier l’assertion de l’Abbé d’Aubignac à travers l'analyse d’un ensemble de pièces identifiées par la critique comme relevant, en tant que genre, de la tragédie, de la comédie ou de la pastorale\ ?
+\item question 2\ : l’analyse des métadonnées de genre et inspiration montre la présence de pièces d’inspiration pastorale mais ne relevant pas du genre pastoral. On peut donc supposer que les pièces d’inspiration pastorale relèvent également d’une thématique pastorale. Est-ce que cette thématique est différente des pièces relevant du genre pastoral\ ?
+\item question 3\ : en se penchant plus spécifiquement sur le théâtre de Jean de Rotrou, parvient-on à retrouver les différentes variations de pastorales évoquées par certains critiques\ ?
+\end{itemize}
+
+Pour extraire les thématiques, on utilise un modèle de \textit{topic modeling} LDA (\textit{Latent Dirichlet Allocation}). On recourt ici l'implémentation \href{http://mallet.cs.umass.edu/}{MALLET}, via l'API proposée par le module Python \href{https://radimrehurek.com/gensim/models/wrappers/ldamallet.html}{Gensim}.
+
+\section*{Prétraitement des données}
+L'algorithme LDA requiert en entrée une liste de \textit{documents}, c'est-à-dire de termes appartenant à un même ensemble et en nombre relativement peu élevé (environ 700-800).\\
+Pour l’ensemble des pièces, on effectue donc le prétraitement suivant :
+\begin{itemize}
+\item on divise chaque pièce en parties plus restreinte d’environ 800 termes, parties qui constitueront les documents analysés par l’algorithme LDA. Dans la mesure où l’on ne s’intéresse qu’aux termes les plus signifiants, on va extraire, pour chacune des pièces, uniquement les lemmes des noms, des adjectifs qualificatifs et des verbes, afin de diminuer le bruit.
+\item pour faciliter l'analyse, on associe à chaque \textit{document} les métadonnées qu'on juge les plus significatives (identifiant, auteur, titre, genre, inspiration et nombre de lemmes en particulier).
+\end{itemize}
+
+Pour réaliser ce traitement, on a écrit le script \href{https://github.com/ragbx/enc-eval-philo-comp/blob/master/preprocessing_tei2csv.py}{preprocessing\_tei2csv.py}, qui, à partir des fichiers XML-TEI fournis, produit un \href{https://github.com/ragbx/enc-eval-philo-comp/blob/master/corpora/all_VER_NOM_ADJqua_ok.csv}{tableau}, qu'on enregistre sous forme de fichier csv et qu'on utilisera par la suite comme fichier source.\\
+Le script et le tableau final sont donc des variantes des fichiers \href{https://gitlab.com/jbcamps/evaluation-philonum/-/blob/master/theatre_classique/generate_tm_samples.bash}{generate\_tm\_samples.bash} et \href{https://gitlab.com/jbcamps/evaluation-philonum/-/blob/master/theatre_classique/tm_samples.tsv}{tm\_samples.tsv} initialement proposés avec les données.
+
+\section*{Question 1 : pastorales, comédies et tragédies\footnote{Les traitements et résultats relatifs à cette question sont détaillés dans le fichier \href{https://github.com/ragbx/enc-eval-philo-comp/blob/master/question1.ipynb}{question1.ipynb}.}}
+Si l'Abbé d'Aubignac dit vrai, on devrait réussir à dégager trois thématiques, liées respectivement à la cour, à la ville et à la campagne et correspondant à la tragédie, la comédie et la pastorale.\\
+
+\textbf{Délimitation du corpus}\\
+On essaie de constituer un corpus comprenant un nombre équilibré de \textit{documents} relevant de pièces identifiées comme tragédie, comédie ou pastorale.\\
+On sélectionne d'abord les sept pastorales du corpus\ : \textit{Lisimène} (Boyer), \textit{Le Berger extravagant} (Thomas Corneille), \textit{Délie} (Donneau de Vizé), \textit{Les Charmes de Félicie} (Pousset de Montauban), \textit{Les Fêtes de l'Amour et de Bacchus} (Quinault), \textit{Amarillis} (Rotrou), \textit{Cléagénor et Doristée} (Rotrou).\\
+On ajoute à celles-ci les comédies et tragédies écrites par les auteurs de pastorales, auxquelles on ajoute quelques œuvres d'auteurs emblématiques (Pierre Corneille, Racine, Molière)\ : \textit{Le Feint astrologue} (Thomas Corneille), \textit{L'Embarras de Godard} (Donneau de Vizé), \textit{Le Gentilhomme Guespin} (Donneau de Vizé), \textit{La Comédie sans comédie} (Quinault), \textit{Les Sosies} (Rotrou), \textit{L'Illusion comique} (Pierre Corneille), \textit{Les Fourberies de Scapin} (Molière), \textit{Les Plaideurs} (Racine) pour la comédie\ ; \textit{Agamemnon (Boyer)}, \textit{La Mort d'Achille} (Thomas Corneille), \textit{Les Amours du Soleil} (Donneau de Vizé), \textit{Zénobie} (Pousset de Montauban), \textit{Atys} (Quinault), \textit{Le Véritable Saint Genest} (Rotrou), \textit{Horace} (Pierre Corneille), \textit{Britannicus} (Racine) pour la tragédie.\\
+On veille enfin à obtenir un nombre relativement égal de lemmes entre les trois genres, on supprime donc quelques documents parmi les pièces relevant de la tragédie et de la comédie pour parvenir à un équilibre.\\
+
+\textbf{Élimination des lemmes les plus fréquents}\\
+On établit la table de fréquence des lemmes du corpus afin d'éliminer les termes les plus fréquents. Sachant que n'ont été retenus que les lemmes des noms, verbes et adjectifs qualificatifs, on retient un seuil de fréquence cumulée relativement bas. Après plusieurs essais, on arrête celui-ci à 30 \%.\\
+
+\textbf{Entraînement et des modèles LDA}\\
+Après plusieurs tests, on décide de retenir deux modèles LDA, l'un à trois sujets (ce qui correspond au nombre de genres), l'autre à six sujets (modèle pour lequel le calcul de la cohérence renvoie un taux assez correct).\\
+\\
+\\
+\textbf{Interprétation du modèle à trois sujets}\\
+Le modèle parvient à extraire trois thèmes, qui semblent bien correspondre aux trois genres :
+\begin{itemize}
+\item thème 1 : tragédie (lexique qui évoque la grandeur et la noblesse),
+\item thème 2 : comédie (lexique qui évoque des situations et des relations propres à la bourgeoisie du XVIIe s.)
+\item thème 3 : pastorale (lexique qui évoque à la fois la campagne et les relations amoureuses).
+\end{itemize}
+
+L'examen des mesures de contributions des thèmes aux pièces soulève quelques questions. \textit{Les Amours du Soleil} (Donneau de Vizé) semblent plutôt relever de la pastorale que de la tragédie (on notera que c'est d'ailleurs le genre retenu par l'éditeur). De même, on constate que la \textit{Comédie sans comédie} (Quinault) emprunte plutôt la thématique de la pastorale que de la comédie. À l'inverse, \textit{Cléagénor et Doristée} (Rotrou) ont davantage de traits de la tragédie que de la pastorale. Enfin, deux pastorales témoignent d'un mélange assez marqués des thématiques de la pastorale et de la comédie : \textit{L'Embarras de Godard} (Donneau de Vizé) et \textit{Les Charmes de Félicie} (Pousset de Montauban).\\
+
+\textbf{Interprétation du modèle à six sujets}\\
+S'il est difficile de relier précisément les sujets obtenus à l'un ou l'autre des trois genres, le modèle à six sujets permet en revanche de préciser l'analyse pour les pièces ambivalentes :
+\begin{itemize}
+\item le classement des \textit{Amours du Soleil} (Donneau de Vizé) en tant que pastorale plutôt que tragédie est confirmé,
+\item le doute concernant \textit{L'Embarras de Godard} (Donneau de Vizé) semble levé (la pièce tient bien de la comédie),
+\item \textit{Les Charmes de Félicie} (Pousset de Montauban) se caractérisent bien par le mélange des thématiques de la pastorale et de la comédie,
+\item \textit{Cléagénor et Doristée} (Rotrou) apparaissent bien comme un cas particulier : le modèle renvoie une thématique quasiment propre à cette pièce (thématique d'une relation amoureuse contrariée, dans un cadre difficile à déterminer (ni la ville, ni la cour, ni la campagne)\ ?).
+\end{itemize}
+
+Le modèle semble toutefois mal fonctionner pour la \textit{Comédie sans comédie} (Quinault), qu'on ne parvient pas à classer.
+
+
+\section*{Question 2 : pastorales et inspiration pastorale\footnote{Les traitements et résultats relatifs à cette question sont détaillés dans le fichier \href{https://github.com/ragbx/enc-eval-philo-comp/blob/master/question2.ipynb}{question2.ipynb}.}}
+Les pièces d'inspiration pastorale mais identifiées comme tragédies ou comédies ont-elles une thématique qui leur est propre ou qui est partagée avec les pièces relevant du genre de la pastorale\ ?\\
+
+\textbf{Délimitation du corpus}\\
+On constitue un nouveau corpus, qui comprend\ :
+\begin{itemize}
+\item les sept pastorales\ : \textit{Lisimène} (Boyer), \textit{Le Berger extravagant} (Thomas Corneille), \textit{Délie} (Donneau de Vizé), \textit{Les Charmes de Félicie} (Pousset de Montauban), \textit{Les Fêtes de l'Amour et de Bacchus} (Quinault), \textit{Amarillis} (Rotrou), \textit{Cléagénor et Doristée} (Rotrou),
+\item des textes relevant de genres très voisins de la pastorale (au moins pour leur thématique)\ : deux pastorales héroïques (\textit{Acis et Galatée} (Campistron) et \textit{La Silvanire} (Urfé)) et deux égloques (\textit{La Grotte de Versailles} (Quinault) et \textit{Le Temple de la paix} (Quinault)),
+\item les pièces d'inspiration pastorale classées dans un autre genre\ : \textit{Les Noces de Vaugirard} (Discret), \textit{Astrée} (La Fontaine), \textit{Mélicerte} (Molière), \textit{La Généreuse ingratitude} (Quinault), \textit{Palinice, Circéine et Florice} (Rayssiguier), \textit{Antigone} (Rotrou), \textit{La Bague de l'oubli} (Rotrou), \textit{La Céliane} (Rotrou).\\
+\end{itemize}
+
+\textbf{Élimination des lemmes les plus fréquents}\\
+Comme précédemment, on établit la table de fréquence des lemmes du corpus afin d'éliminer les termes les plus fréquents. Après plusieurs essais, on arrête le seuil de fréquence cumulée à 25 \%.\\
+
+\textbf{Essai de construction d'un modèle pertinent}\\
+Après avoir calculé le taux de cohérence pour des modèles dont le nombre de sujets varie de un à vingt, on constate assez peu de variation, ce qui ne permet pas d'arrêter un choix.\\
+On lance donc manuellement le modèle sur 3, 5, 7 et 9 sujets. Aucun ne donne de résultat probant et surtout cohérent (deux pièces seront proches pour un modèle, éloignées pour d'autres). À titre d'exemple sont présentés les résultats pour un modèle à cinq sujets.\\
+
+\textbf{Interprétation}\\
+En dépit de tests sur différents modèles (avec pour variable le nombre de sujets), on ne parvient pas à construire d'ensembles stables permettant de dégager une opposition entre pièces dont le genre est la pastorale et pièces relevant d'une inspiration pastorale mais étant classées dans un genre différent.
+Cela laisse à penser la thématique pastorale n'est pas spécifique au genre du même nom.
+
+Pour aller plus loin, on pourrait reprendre le corpus précédent (question 1) et essayer de l'étendre de manière systématique aux pièces d'inspiration pastorale.
+
+\section*{Question 3 : focus sur Jean de Rotrou\footnote{Les traitements et résultats relatifs à cette question sont détaillés dans le fichier \href{https://github.com/ragbx/enc-eval-philo-comp/blob/master/question3.ipynb}{question3.ipynb}.}}
+Les pièces de Rotrou sont particulièrement malaisées à classer de manière univoque au sein des différents genres dramatiques. L'auteur fait fréquemment usage, au sein d'une même œuvre, de caractéristiques propres à des genres multiples. Par ailleurs, il n'hésite pas à changer la dénomination du genre d'une pièce d'une édition à l'autre\footnote{Voir BERREGARD Sandrine, \og La mixité des genres dramatiques dans le théâtre de Rotrou \fg{}, \textit{Littératures classiques}, 2007, no 2, p. 97-106.}.\\
+Ce jeu entre les genres est particulièrement marqué pour quelques comédies et tragi-comédies que le critique Jacques Morel rassemble sous l’appellation de \og pastorales pures \fg{}\footnote{MOREL Jacques, \textit{Jean Rotrou, dramaturge de l’ambiguïté}, Paris, Armand Colin, 1968, p. 137.}\ :
+\begin{displayquote}
+On désignera sous le nom de \textit{pastorale pure} une œuvre dramatique de structure \textit{fermée}, dont le style s'apparente tour à tour à la manière lyrique et à la manière élégiaque, et dont l'action, qui exclut l'aventure et les surprises non préparées, se déroule selon l'exigence d'une certaine logique [...]. Les bergers n'y sont pas indispensables.
+\end{displayquote}
+Morel définit donc cette catégorie moins par la matière que par le style et les modalités de l'action. On tentera de vérifier cette absence de spécificité thématique.\\
+
+\textbf{Délimitation du corpus}\\
+Le jeu de données dont on dispose ne comprend qu'une seule de ces pièces, \textit{La Céliane}. On la mettra en regard des deux pièces de Rotrou classées comme pastorale, \textit{Amarillis} et \textit{Cléagénor et Doristée} (cette dernière se distinguant fortement de l'ensemble des pastorales, comme on l'a vu dans la question 1).\\
+
+\textbf{Élimination des lemmes les plus fréquents}\\
+Comme précédemment, on établit la table de fréquence des lemmes du corpus afin d'éliminer les termes les plus fréquents. Après plusieurs essais, on arrête le seuil de fréquence cumulée à 25 \%.\\
+
+\textbf{Essai de construction d'un modèle pertinent}\\
+Une analyse à trois sujets dispose d'un bon niveau de cohérence. Vu la taille du corpus, on n'ira pas au-delà.\\
+
+\textbf{Interprétation}\\
+Des trois pièces, \textit{Amarillis} est celle qui fait preuve de la plus grande unité thématique.
+À l'inverse, \textit{Cléagénor et Doristée} maintient son statut d'œuvre inclassable.
+
+\textit{La Céliane} puise dans deux thématiques, l'une proche du registre tragique (thème 2 : "mort", "honneur"), l'autre du registre amoureux (thème 3 : "flamme", "désir", "ardeur". S'il est est difficile de conclure, un point est sans équivoque : les bergers (tout comme l'ensemble du lexique de la campagne) sont bien absents, comme le souligne Morel.
+
+\section*{Conclusion}
+Si l'Abbé d'Aubignac distingue tragédie, comédie et pastorale par des thématiques qui leur seraient spécifiques, et s'il est effectivement possible de vérifier ces spécificités sur un corpus restreint et composé essentiellement de pièces qui pratiquent peu le mélange (pas de tragi-comédie par exemple), l'analyse semble montrer que, plutôt qu'un genre bien circonscrit, la pastorale constitue \og un ensemble de thèmes et d’images susceptibles de s’incarner dans différents genres \fg{}\footnote{BERREGARD Sandrine, \og La mixité des genres dramatiques dans le théâtre de Rotrou \fg{}, \textit{Littératures classiques}, 2007, no 2, p. 102.}.\\
+Les méthodes de \textit{topic modeling} permettent donc de saisir une part des modalités d'un genre, mais doivent être complétées par d'autres approches, par exemple d'étude du style ou des modalités de l'action.
+
+\end{document}
